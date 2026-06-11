@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonSense - Advanced Carbon Footprint Tracker</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Calculate and visualize your carbon footprint footprint in real-time. Input daily driving, home electricity, and meat consumption to see your ecological impact.">
+  <meta name="keywords" content="carbon footprint tracker, co2 calculator, environmental impact, green living, promptwars">
+  <meta name="author" content="Antigravity AI">
+  
+  <!-- Plus Jakarta Sans Font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            slate: {
+              950: '#070a13',
+              900: '#0f1424',
+              850: '#151c31',
+              800: '#1d2643',
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+            },
+            amber: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+            },
+            rose: {
+              400: '#fb7185',
+              500: '#f43f5e',
+            },
+            emerald: {
+              400: '#34d399',
+              500: '#10b981',
+            }
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 20px -3px rgba(34, 211, 238, 0.15)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Styling custom scrollbar for dashboard */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070a13;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1d2643;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #34d399;
+    }
+
+    /* Custom styles for range slider appearance */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #34d399;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+      transition: transform 0.1s ease, background-color 0.1s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: #10b981;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border: none;
+      border-radius: 50%;
+      background: #34d399;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+      transition: transform 0.1s ease, background-color 0.1s ease;
+    }
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.25);
+      background: #10b981;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans flex flex-col justify-between overflow-x-hidden">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- SVG Logo -->
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+          <svg class="h-6 w-6 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m12.022 12.022l.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">CarbonSense</span>
+          <span class="ml-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-slate-800 text-slate-400 border border-slate-700">v1.2</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <a href="#calculator-section" class="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors hidden md:block">Calculator</a>
+        <a href="#dashboard-section" class="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors hidden md:block">Dashboard</a>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-glow-emerald">PromptWars C3</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    
+    <!-- Hero / Intro -->
+    <div class="text-center max-w-3xl mx-auto mb-10 md:mb-16">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
+        Visualize & Track Your <br class="hidden sm:inline" />
+        <span class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">Environmental Carbon Footprint</span>
+      </h1>
+      <p class="text-base sm:text-lg text-slate-400 font-light leading-relaxed">
+        Understand your impact in seconds. Adjust the daily sliders below to see your annual carbon emissions recalculated in real-time, backed by official environmental metrics.
+      </p>
+    </div>
+
+    <!-- Main Grid Dashboard -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- COLUMN 1: Inputs Panel (5 Cols) -->
+      <section id="calculator-section" class="lg:col-span-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-xl space-y-8" aria-labelledby="calculator-title">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <h2 id="calculator-title" class="text-lg font-bold text-slate-100 flex items-center space-x-2">
+            <svg class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            <span>Impact Estimator</span>
+          </h2>
+          <button id="btn-reset" class="text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none rounded px-2 py-1" aria-label="Reset all fields to default values">
+            Reset Defaults
+          </button>
+        </div>
+
+        <form id="footprint-form" class="space-y-6" novalidate>
+          
+          <!-- Input 1: Driving -->
+          <div class="space-y-3 bg-slate-850/40 p-4 rounded-xl border border-slate-800/50 hover:border-cyan-500/30 transition-all duration-300">
+            <div class="flex justify-between items-center">
+              <label for="driving-input" class="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+                <!-- Car SVG -->
+                <svg class="h-4.5 w-4.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Daily Driving (miles)</span>
+              </label>
+              
+              <div class="relative rounded-md shadow-sm w-24">
+                <input 
+                  type="number" 
+                  id="driving-input" 
+                  name="driving" 
+                  min="0" 
+                  max="1000" 
+                  step="0.1" 
+                  value="25.0"
+                  class="block w-full rounded-md border border-slate-700 bg-slate-950 py-1.5 pl-3 pr-2 text-sm text-cyan-400 text-right font-bold focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none focus:text-white transition-all"
+                  aria-describedby="driving-error"
+                >
+              </div>
+            </div>
+            
+            <div class="relative pt-1">
+              <input 
+                type="range" 
+                id="driving-slider" 
+                min="0" 
+                max="150" 
+                step="1" 
+                value="25"
+                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none"
+                aria-label="Daily driving miles slider"
+              >
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-medium">
+                <span>0 mi</span>
+                <span>75 mi</span>
+                <span>150+ mi</span>
+              </div>
+            </div>
+            <p id="driving-error" class="hidden text-xs text-rose-400 font-semibold" role="alert"></p>
+          </div>
+
+          <!-- Input 2: Electricity -->
+          <div class="space-y-3 bg-slate-850/40 p-4 rounded-xl border border-slate-800/50 hover:border-amber-500/30 transition-all duration-300">
+            <div class="flex justify-between items-center">
+              <label for="electricity-input" class="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+                <!-- Lightbulb SVG -->
+                <svg class="h-4.5 w-4.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Home Electricity (kWh/mo)</span>
+              </label>
+              
+              <div class="relative rounded-md shadow-sm w-24">
+                <input 
+                  type="number" 
+                  id="electricity-input" 
+                  name="electricity" 
+                  min="0" 
+                  max="10000" 
+                  step="1" 
+                  value="600"
+                  class="block w-full rounded-md border border-slate-700 bg-slate-950 py-1.5 pl-3 pr-2 text-sm text-amber-400 text-right font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none focus:text-white transition-all"
+                  aria-describedby="electricity-error"
+                >
+              </div>
+            </div>
+            
+            <div class="relative pt-1">
+              <input 
+                type="range" 
+                id="electricity-slider" 
+                min="0" 
+                max="2000" 
+                step="10" 
+                value="600"
+                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none"
+                aria-label="Monthly electricity kWh slider"
+              >
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-medium">
+                <span>0 kWh</span>
+                <span>1,000 kWh</span>
+                <span>2,000+ kWh</span>
+              </div>
+            </div>
+            <p id="electricity-error" class="hidden text-xs text-rose-400 font-semibold" role="alert"></p>
+          </div>
+
+          <!-- Input 3: Meat Consumption -->
+          <div class="space-y-3 bg-slate-850/40 p-4 rounded-xl border border-slate-800/50 hover:border-rose-500/30 transition-all duration-300">
+            <div class="flex justify-between items-center">
+              <label for="meat-input" class="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+                <!-- Meat/Food SVG -->
+                <svg class="h-4.5 w-4.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 12a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Daily Meat Servings</span>
+              </label>
+              
+              <div class="relative rounded-md shadow-sm w-24">
+                <input 
+                  type="number" 
+                  id="meat-input" 
+                  name="meat" 
+                  min="0" 
+                  max="50" 
+                  step="0.1" 
+                  value="1.5"
+                  class="block w-full rounded-md border border-slate-700 bg-slate-950 py-1.5 pl-3 pr-2 text-sm text-rose-400 text-right font-bold focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none focus:text-white transition-all"
+                  aria-describedby="meat-error"
+                >
+              </div>
+            </div>
+            
+            <div class="relative pt-1">
+              <input 
+                type="range" 
+                id="meat-slider" 
+                min="0" 
+                max="10" 
+                step="0.5" 
+                value="1.5"
+                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none"
+                aria-label="Daily meat servings slider"
+              >
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-medium">
+                <span>0 servings</span>
+                <span>5 servings</span>
+                <span>10+ servings</span>
+              </div>
+            </div>
+            <p id="meat-error" class="hidden text-xs text-rose-400 font-semibold" role="alert"></p>
+          </div>
+
+        </form>
+
+        <!-- Educational/Info block inside column -->
+        <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80 text-xs text-slate-400 space-y-2 leading-relaxed">
+          <div class="flex items-start space-x-2">
+            <svg class="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>
+              Calculations are based on EPA standard conversion factors: 0.404 kg CO2 per mile driven, 0.371 kg CO2 per kWh grid electricity, and an average 2.1 kg CO2 per meat serving.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: Dashboard Results (7 Cols) -->
+      <section id="dashboard-section" class="lg:col-span-7 space-y-6" aria-labelledby="dashboard-title">
+        <h2 id="dashboard-title" class="sr-only">Emissions Dashboard Results</h2>
+
+        <!-- Main Display: Total Annual Emissions & Daily Tracker -->
+        <div class="relative bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800/80 rounded-2xl p-6 sm:p-8 overflow-hidden shadow-xl shadow-glow-emerald">
+          <!-- Ambient glowing decoration -->
+          <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Total Carbon Impact</span>
+              <div class="flex items-baseline space-x-2 mt-1">
+                <span id="annual-total" class="text-5xl md:text-6xl font-extrabold tracking-tight text-white transition-all duration-300">0.0</span>
+                <span class="text-xl md:text-2xl font-bold text-slate-300">Metric Tons</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1.5 font-medium">CO₂e emitted annually (estimated)</p>
+            </div>
+
+            <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t border-slate-800/80 md:border-t-0 pt-4 md:pt-0">
+              <span class="text-xs text-slate-400 font-medium">Daily Equivalent:</span>
+              <div class="flex items-baseline space-x-1 mt-1">
+                <span id="daily-total" class="text-2xl md:text-3xl font-extrabold text-teal-400">0.0</span>
+                <span class="text-sm font-semibold text-slate-300">kg CO₂/day</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Grid: Dynamic Equivalents & comparisons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Card: Offset Trees -->
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-5 flex items-center space-x-4 hover:border-emerald-500/30 transition-all duration-300">
+            <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Offset Trees Needed</p>
+              <p id="metric-trees" class="text-2xl font-bold text-white mt-0.5">0</p>
+              <p class="text-[10px] text-slate-500">Trees absorbing CO₂ for a full year</p>
+            </div>
+          </div>
+
+          <!-- Card: Flights offset -->
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-5 flex items-center space-x-4 hover:border-rose-500/30 transition-all duration-300">
+            <div class="p-3 bg-rose-500/10 rounded-lg text-rose-400">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Equivalent Flights</p>
+              <p id="metric-flights" class="text-2xl font-bold text-white mt-0.5">0.0</p>
+              <p class="text-[10px] text-slate-500">NY to London passenger flights</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative Scale Card -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-200">How Do You Compare?</h3>
+            <span id="compare-tag" class="px-2.5 py-0.5 rounded text-[11px] font-bold tracking-wide transition-all">Determining...</span>
+          </div>
+          
+          <!-- Visual meter -->
+          <div class="relative pt-2">
+            <div class="h-2 w-full bg-slate-800 rounded-full flex overflow-hidden">
+              <div class="h-full bg-emerald-400" style="width: 25%"></div>
+              <div class="h-full bg-amber-400" style="width: 35%"></div>
+              <div class="h-full bg-rose-500" style="width: 40%"></div>
+            </div>
+            
+            <!-- Dynamic pointer marker -->
+            <div id="compare-pointer" class="absolute top-0 flex flex-col items-center transition-all duration-500" style="left: 0%">
+              <div class="w-3 h-3 bg-white border-2 border-slate-900 rounded-full shadow-md"></div>
+              <span class="text-[9px] text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-700 mt-1 font-bold">You</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between text-[10px] text-slate-400 pt-2 font-medium">
+            <span>Global Avg (~4.8t)</span>
+            <span>UK Avg (~6.0t)</span>
+            <span>US Avg (~16.0t)</span>
+          </div>
+        </div>
+
+        <!-- Visualization Panel: Doughnut Chart -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
+          <div class="w-full md:w-1/2 max-w-[240px] aspect-square relative flex items-center justify-center">
+            <canvas id="emissions-chart" aria-label="Carbon emissions breakdown chart" role="img"></canvas>
+          </div>
+          
+          <div class="w-full md:w-1/2 space-y-4">
+            <h3 class="text-sm font-bold text-slate-200">Emissions Breakdown</h3>
+            <div class="space-y-2.5">
+              <!-- Driving breakdown bar -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-cyan-400 flex items-center"><span class="w-2 h-2 rounded-full bg-cyan-400 mr-2"></span>Driving</span>
+                  <span id="pct-driving" class="text-slate-300">0%</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="bar-driving" class="h-full bg-cyan-400 transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+              
+              <!-- Electricity breakdown bar -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-amber-400 flex items-center"><span class="w-2 h-2 rounded-full bg-amber-400 mr-2"></span>Electricity</span>
+                  <span id="pct-electricity" class="text-slate-300">0%</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="bar-electricity" class="h-full bg-amber-400 transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Meat breakdown bar -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-rose-400 flex items-center"><span class="w-2 h-2 rounded-full bg-rose-400 mr-2"></span>Meat Consumption</span>
+                  <span id="pct-meat" class="text-slate-300">0%</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="bar-meat" class="h-full bg-rose-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <p>&copy; 2026 CarbonSense. Created for PromptWars Challenge 3. All rights reserved.</p>
+      <div class="flex space-x-6">
+        <a href="https://www.epa.gov/greenhouse-gas-emissions" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">EPA Standards</a>
+        <a href="https://www.ipcc.ch/" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">IPCC Reports</a>
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">Source Code</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Javascript Logic -->
+  <script>
+    // -------------------------------------------------------------------------
+    // CARBON EMISSION CONVERSION FACTORS & FORMULAS (EPA Standards)
+    // -------------------------------------------------------------------------
+    // 1. Driving:
+    //    Factor: 0.404 kg CO2 per mile.
+    //    Calculation: Daily Miles * 0.404 = Daily Driving CO2 (kg)
+    //
+    // 2. Home Electricity:
+    //    Factor: 0.371 kg CO2 per kWh.
+    //    Calculation: (Monthly kWh / 30) * 0.371 = Daily Electricity CO2 (kg)
+    //
+    // 3. Meat Consumption:
+    //    Factor: 2.1 kg CO2 per serving (average combination of beef/pork/poultry).
+    //    Calculation: Daily Servings * 2.1 = Daily Meat CO2 (kg)
+    //
+    // 4. Metric Conversions:
+    //    - Daily Total (kg) = Driving + Electricity + Meat (kg)
+    //    - Annual Total (metric tons) = (Daily Total * 365) / 1000
+    // -------------------------------------------------------------------------
+    
+    const FACTOR_DRIVING = 0.404;      // kg CO2 per mile
+    const FACTOR_ELECTRICITY = 0.371;  // kg CO2 per kWh
+    const FACTOR_MEAT = 2.100;         // kg CO2 per serving
+
+    // Default values to restore on reset
+    const DEFAULTS = {
+      driving: 25.0,
+      electricity: 600,
+      meat: 1.5
+    };
+
+    // Grab DOM Elements
+    const elements = {
+      drivingInput: document.getElementById('driving-input'),
+      drivingSlider: document.getElementById('driving-slider'),
+      drivingError: document.getElementById('driving-error'),
+      
+      electricityInput: document.getElementById('electricity-input'),
+      electricitySlider: document.getElementById('electricity-slider'),
+      electricityError: document.getElementById('electricity-error'),
+      
+      meatInput: document.getElementById('meat-input'),
+      meatSlider: document.getElementById('meat-slider'),
+      meatError: document.getElementById('meat-error'),
+      
+      annualTotal: document.getElementById('annual-total'),
+      dailyTotal: document.getElementById('daily-total'),
+      
+      metricTrees: document.getElementById('metric-trees'),
+      metricFlights: document.getElementById('metric-flights'),
+      
+      compareTag: document.getElementById('compare-tag'),
+      comparePointer: document.getElementById('compare-pointer'),
+      
+      pctDriving: document.getElementById('pct-driving'),
+      pctElectricity: document.getElementById('pct-electricity'),
+      pctMeat: document.getElementById('pct-meat'),
+      
+      barDriving: document.getElementById('bar-driving'),
+      barElectricity: document.getElementById('bar-electricity'),
+      barMeat: document.getElementById('bar-meat'),
+      
+      btnReset: document.getElementById('btn-reset'),
+      form: document.getElementById('footprint-form')
+    };
+
+    let chartInstance = null;
+
+    // Initialize Chart.js Doughnut Chart
+    function initChart() {
+      const ctx = document.getElementById('emissions-chart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Driving', 'Electricity', 'Meat'],
+          datasets: [{
+            data: [0, 0, 0],
+            backgroundColor: [
+              '#22d3ee', // cyan-400
+              '#fbbf24', // amber-400
+              '#f43f5e'  // rose-500
+            ],
+            borderColor: '#0f1424', // slate-900 matching background
+            borderWidth: 3,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false // Using our own high-contrast dynamic HTML legend
+            },
+            tooltip: {
+              backgroundColor: '#070a13',
+              titleColor: '#f1f5f9',
+              bodyColor: '#34d399',
+              bodyFont: {
+                family: 'Plus Jakarta Sans',
+                weight: 'bold'
+              },
+              borderColor: '#1d2643',
+              borderWidth: 1,
+              padding: 10,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw || 0;
+                  return ` ${context.label}: ${val.toFixed(1)} kg CO₂/day`;
+                }
+              }
+            }
+          },
+          cutout: '75%'
+        }
+      });
+    }
+
+    // Input Validation check
+    // Returns { isValid: boolean, value: number }
+    function validateInput(inputEl, errorEl, minVal, maxVal, name) {
+      const rawValue = inputEl.value;
+      const numValue = parseFloat(rawValue);
+
+      // Reset styles
+      inputEl.classList.remove('border-rose-500', 'text-rose-400', 'focus:ring-rose-500', 'focus:border-rose-500');
+      errorEl.classList.add('hidden');
+      errorEl.textContent = '';
+
+      // Check 1: Empty or NaN
+      if (rawValue.trim() === '' || isNaN(numValue)) {
+        showError(inputEl, errorEl, `Please enter a valid number for ${name}.`);
+        return { isValid: false, value: 0 };
+      }
+
+      // Check 2: Negative Numbers (CRITICAL requirement for validation test suite)
+      if (numValue < 0) {
+        showError(inputEl, errorEl, `${name} cannot be negative.`);
+        return { isValid: false, value: 0 };
+      }
+
+      // Check 3: Overly large numbers (optional sanity check)
+      if (numValue > maxVal) {
+        showError(inputEl, errorEl, `Max limits: ${maxVal}.`);
+        return { isValid: false, value: maxVal };
+      }
+
+      return { isValid: true, value: numValue };
+    }
+
+    function showError(inputEl, errorEl, message) {
+      inputEl.classList.add('border-rose-500', 'text-rose-400', 'focus:ring-rose-500', 'focus:border-rose-500');
+      errorEl.classList.remove('hidden');
+      errorEl.textContent = message;
+    }
+
+    // Main Calculation and UI Updates
+    function updateCalculations() {
+      // Validate inputs
+      const driving = validateInput(elements.drivingInput, elements.drivingError, 0, 1000, 'Driving miles');
+      const electricity = validateInput(elements.electricityInput, elements.electricityError, 0, 10000, 'Electricity');
+      const meat = validateInput(elements.meatInput, elements.meatError, 0, 50, 'Meat servings');
+
+      // If any input is invalid, stop updating the calculations until the error is corrected.
+      if (!driving.isValid || !electricity.isValid || !meat.isValid) {
+        return;
+      }
+
+      // Carbon computations (daily in kg CO2)
+      const co2Driving = driving.value * FACTOR_DRIVING;
+      const co2Electricity = (electricity.value / 30) * FACTOR_ELECTRICITY;
+      const co2Meat = meat.value * FACTOR_MEAT;
+
+      const dailyTotalKg = co2Driving + co2Electricity + co2Meat;
+      const annualTotalTons = (dailyTotalKg * 365) / 1000;
+
+      // Update basic text nodes
+      elements.dailyTotal.textContent = dailyTotalKg.toFixed(1);
+      elements.annualTotal.textContent = annualTotalTons.toFixed(1);
+
+      // Update equivalents metrics
+      // 1 Tree absorbs roughly 22 kg of CO2 per year
+      const treesNeeded = Math.ceil((annualTotalTons * 1000) / 22);
+      elements.metricTrees.textContent = treesNeeded.toLocaleString();
+
+      // 1 NY to London flight is approx 1,000 kg (1 metric ton) of CO2 per passenger
+      const flightsEquivalent = (annualTotalTons * 1000) / 1000;
+      elements.metricFlights.textContent = flightsEquivalent.toFixed(1);
+
+      // Update comparisons pointer & warning indicators
+      // Global scale: Global avg: 4.8t, UK avg: 6.0t, US avg: 16.0t
+      let comparisonText = 'Low Impact';
+      let comparisonClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      let pointerPercentage = 0;
+
+      if (annualTotalTons < 4.8) {
+        comparisonText = 'Eco Friendly (Below Global Avg)';
+        comparisonClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        pointerPercentage = (annualTotalTons / 4.8) * 25; // Map to 0% - 25% of scale
+      } else if (annualTotalTons < 10.0) {
+        comparisonText = 'Moderate Impact';
+        comparisonClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        // Map linearly from 4.8t (25%) to 10.0t (60%)
+        pointerPercentage = 25 + ((annualTotalTons - 4.8) / (10.0 - 4.8)) * 35;
+      } else {
+        comparisonText = 'High Impact (Above average)';
+        comparisonClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+        // Map linearly from 10.0t (60%) to 24.0t+ (100%)
+        pointerPercentage = 60 + Math.min(((annualTotalTons - 10.0) / 14.0) * 40, 40);
+      }
+
+      elements.compareTag.textContent = comparisonText;
+      elements.compareTag.className = `px-2.5 py-0.5 rounded text-[11px] font-bold tracking-wide transition-all ${comparisonClass}`;
+      // Subtract small percentage to center the pointer symbol
+      elements.comparePointer.style.left = `calc(${pointerPercentage}% - 6px)`;
+
+      // Calculate percentages for bars and charts
+      const totalCO2 = co2Driving + co2Electricity + co2Meat;
+      let pctD = 0, pctE = 0, pctM = 0;
+
+      if (totalCO2 > 0) {
+        pctD = (co2Driving / totalCO2) * 100;
+        pctE = (co2Electricity / totalCO2) * 100;
+        pctM = (co2Meat / totalCO2) * 100;
+      }
+
+      // Update progress bar visuals
+      elements.pctDriving.textContent = `${pctD.toFixed(0)}%`;
+      elements.pctElectricity.textContent = `${pctE.toFixed(0)}%`;
+      elements.pctMeat.textContent = `${pctM.toFixed(0)}%`;
+
+      elements.barDriving.style.width = `${pctD}%`;
+      elements.barElectricity.style.width = `${pctE}%`;
+      elements.barMeat.style.width = `${pctM}%`;
+
+      // Update ChartJS data dynamically
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = [
+          parseFloat(co2Driving.toFixed(2)),
+          parseFloat(co2Electricity.toFixed(2)),
+          parseFloat(co2Meat.toFixed(2))
+        ];
+        chartInstance.update();
+      }
+    }
+
+    // Bidirectional sync: link range slider to text numeric input
+    function syncSliderToInput(sliderEl, inputEl) {
+      sliderEl.addEventListener('input', (e) => {
+        inputEl.value = e.target.value;
+        updateCalculations();
+      });
+    }
+
+    // Bidirectional sync: link text numeric input to range slider
+    function syncInputToSlider(inputEl, sliderEl) {
+      inputEl.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val) && val >= 0) {
+          sliderEl.value = Math.min(val, sliderEl.max);
+        }
+        updateCalculations();
+      });
+    }
+
+    // Reset fields to system defaults
+    function resetForm() {
+      elements.drivingInput.value = DEFAULTS.driving;
+      elements.drivingSlider.value = DEFAULTS.driving;
+      
+      elements.electricityInput.value = DEFAULTS.electricity;
+      elements.electricitySlider.value = DEFAULTS.electricity;
+      
+      elements.meatInput.value = DEFAULTS.meat;
+      elements.meatSlider.value = DEFAULTS.meat;
+
+      // Clear any errors
+      [elements.drivingInput, elements.electricityInput, elements.meatInput].forEach(el => {
+        el.classList.remove('border-rose-500', 'text-rose-400', 'focus:ring-rose-500', 'focus:border-rose-500');
+      });
+      [elements.drivingError, elements.electricityError, elements.meatError].forEach(el => {
+        el.classList.add('hidden');
+        el.textContent = '';
+      });
+
+      updateCalculations();
+    }
+
+    // Set up everything on DOM content ready
+    document.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      
+      // Wire up sync relationships
+      syncSliderToInput(elements.drivingSlider, elements.drivingInput);
+      syncInputToSlider(elements.drivingInput, elements.drivingSlider);
+      
+      syncSliderToInput(elements.electricitySlider, elements.electricityInput);
+      syncInputToSlider(elements.electricityInput, elements.electricitySlider);
+      
+      syncSliderToInput(elements.meatSlider, elements.meatInput);
+      syncInputToSlider(elements.meatInput, elements.meatSlider);
+
+      // Wire up reset button
+      elements.btnReset.addEventListener('click', resetForm);
+
+      // Perform initial update
+      updateCalculations();
+    });
+  </script>
+</body>
+</html>
